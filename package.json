@@ -8,6 +8,7 @@
   "scripts": {
     "dev:web": "pnpm --filter web dev",
     "dev:mobile": "pnpm --filter mobile start",
-    "dev:api": "pnpm --filter api start:dev"
+    "dev:api": "pnpm --filter api start:dev",
+    "tokens:build": "pnpm --filter @datewise/tokens build"
   }
 }
