@@ -17,8 +17,19 @@ apps/api        NestJS 12 (strict TS, Vitest, not Jest)
 apps/web        Next.js 16 (App Router, Tailwind 4, src/ dir)
 apps/mobile     Expo SDK 58, React Native 0.88, Expo Router (routes in src/app/)
 packages/shared API types and Zod schemas from the API contract (not created yet)
-packages/tokens design tokens for web and mobile (not created yet)
+packages/tokens design tokens for web and mobile (@datewise/tokens)
 ```
+
+**How tokens flow:**
+- `packages/tokens/src/tokens.ts` is the single source, holding plain values only.
+- `pnpm tokens:build` runs `scripts/build.ts` (Node 24 runs TS directly) and generates two files:
+  - `dist/theme.css`, the Tailwind 4 `@theme` imported by web.
+  - `dist/tailwind-preset.cjs`, the Tailwind 3 preset for mobile, because stable NativeWind 4 still uses Tailwind 3.
+- `dist/` is committed. Edit only `tokens.ts`, then rebuild.
+- Class names are identical on both platforms (`bg-surface-1`, `text-ink-2`, `rounded-pill`, `text-display`, `cover-foodie`).
+- Tailwind's default palette and radii are **removed**, so off-system classes like `bg-zinc-800` don't exist.
+- Fonts are loaded per platform: `next/font` on web, defined in `globals.css` `@theme inline`; mobile setup comes in Step 3b.
+- Turbopack transpiles workspace packages automatically, so there's no `transpilePackages` entry.
 
 - pnpm 12 workspaces, Node 24 (`.nvmrc`), since Node 20 is end-of-life.
 - Root scripts: `pnpm dev:web`, `pnpm dev:mobile`, `pnpm dev:api`.
@@ -42,7 +53,7 @@ These versions are newer than most training data and tutorials.
 - **UI first, then backend.** Web screens first, then mobile, all built against a **typed mock API client** that follows the guide's contract (simulated latency, failures and live progress). An env var switches between the mock and the HTTP client, and each screen is connected to the real API as its endpoint lands.
 - **Backend skips the guide's raw `node:http` and Express sessions** (the owner already knows them) and starts at Nest, week 1 session 3.
 - **Claude writes the first version of each backend module.** The owner then changes and extends it, guided by "Your turn" exercises.
-- **Mobile styling uses NativeWind**, so web and mobile share one styling model. Web uses Tailwind and TanStack Query; mobile uses Expo Router, TanStack Query and `expo-secure-store` for tokens.
+- **Mobile styling uses NativeWind v4, the stable release** (chosen 2026-10-24). The v5 release candidate supports Tailwind 4 but is marked not for production and was tested only on SDK 57. Revisit once v5 is stable. Web and mobile share one styling model. Web uses Tailwind and TanStack Query; mobile uses Expo Router, TanStack Query and `expo-secure-store` for tokens.
 
 ### Docker
 Staged, following the guide: a services-only `docker-compose.yml` (MongoDB) at the start of the backend phase, the API joins in week 3 session 11, and the worker, queue Redis and Mailpit in sessions 13–14. **Web and mobile never run in Docker in dev**, because of Metro and device networking, QR codes, and slow file watching on macOS.
@@ -80,7 +91,8 @@ Fully specified in the lab guide under "Plan customization". In short: **shape b
 
 - [x] Phase 0, Step 1: monorepo scaffold
 - [x] Phase 0, Step 2: design system (v0.3 approved)
-- [ ] Phase 0, Step 3: `packages/tokens`, wired into Tailwind (web) and NativeWind (mobile)
+- [x] Phase 0, Step 3a: `packages/tokens` and web wiring
+- [ ] Phase 0, Step 3b: NativeWind v4 on mobile (check SDK 58 compatibility first) plus mobile fonts
 - [ ] Phase 1: web screens on the mock client
 - [ ] Phase 2: mobile screens on the mock client
 - [ ] Phase 3 onward: the backend lab, week by week, connecting screens as endpoints land
