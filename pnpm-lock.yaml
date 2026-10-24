@@ -314,6 +314,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@datewise/tokens':
+        specifier: workspace:*
+        version: link:../../packages/tokens
       next:
         specifier: 16.4.2
         version: 16.4.2(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@20.19.43)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -345,6 +348,15 @@ importers:
       tailwindcss:
         specifier: ^4
         version: 4.3.3
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/tokens:
+    devDependencies:
+      '@types/node':
+        specifier: ^24
+        version: 24.19.2
       typescript:
         specifier: ^5
         version: 5.9.3
