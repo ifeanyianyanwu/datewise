@@ -28,7 +28,16 @@ packages/tokens design tokens for web and mobile (@datewise/tokens)
 - `dist/` is committed. Edit only `tokens.ts`, then rebuild.
 - Class names are identical on both platforms (`bg-surface-1`, `text-ink-2`, `rounded-pill`, `text-display`, `cover-foodie`).
 - Tailwind's default palette and radii are **removed**, so off-system classes like `bg-zinc-800` don't exist.
-- Fonts are loaded per platform: `next/font` on web, defined in `globals.css` `@theme inline`; mobile setup comes in Step 3b.
+- Fonts are loaded per platform: `next/font` on web, defined in `globals.css` `@theme inline`; on mobile, `useFonts` in `src/app/_layout.tsx`.
+- Covers on both platforms come from `coverBackground(theme)` in the tokens package. RN 0.88 renders CSS-style `radial-gradient` through `style={{ backgroundImage }}`.
+
+**Mobile styling setup (NativeWind 4):**
+- Wired in through `babel.config.js` (the `jsxImportSource` setting), `metro.config.js` (`inlineRem: 16`, so 1rem = 16px as on web), `tailwind.config.js` (the presets plus font families), `src/global.css`, and `nativewind-env.d.ts`.
+- **`react-native-css-interop` must stay a direct dependency, pinned to the exact version NativeWind uses.** NativeWind's Babel step makes every file import it, and pnpm's isolated layout only lets the app import its own declared dependencies. After upgrading NativeWind, check this with `pnpm why react-native-css-interop`, which should show a single version.
+- **Fonts:** expo-font 58 registers several weights under one family name, so `font-body font-semibold` works the same as on web. The families are `Archivo`, `Figtree` and `DM Mono`.
+  - Import Google fonts **per weight** (`@expo-google-fonts/figtree/600SemiBold`). The package root pulls in every weight.
+  - Wide display type uses the static `assets/fonts/ArchivoExpanded-ExtraBold.ttf` (from Omnibus-Type, under the OFL), because React Native can't set a variable font's width axis.
+- **Verifying mobile changes:** run `npx tsc --noEmit`, `npx expo lint`, `npx expo-doctor`, and `npx expo export --platform ios --platform android --platform web --output-dir <scratch>`. The export catches Babel, Metro and resolution errors without needing a device.
 - Turbopack transpiles workspace packages automatically, so there's no `transpilePackages` entry.
 
 - pnpm 12 workspaces, Node 24 (`.nvmrc`), since Node 20 is end-of-life.
@@ -44,7 +53,6 @@ These versions are newer than most training data and tutorials.
 - **pnpm 12 ignores `.npmrc` for settings.** Settings such as `allowBuilds` and `nodeLinker` go in `pnpm-workspace.yaml`.
 - **Expo works with pnpm's default isolated layout** (since SDK 54), so don't hoist. Check for duplicate React or React Native with `pnpm why react-native`.
 - **Add mobile dependencies with `npx expo install <pkg>`**, never `pnpm add`, so versions match SDK 58.
-- **`apps/mobile/src/components/app-tabs.web.tsx` has a known type error** in Expo's demo code. It gets replaced when we build our own navigation.
 - Checks before calling anything done: `pnpm --filter api build && pnpm --filter api test`, `pnpm --filter web build`, and `npx tsc --noEmit` plus `npx expo-doctor` in `apps/mobile`.
 
 ## Decisions so far
@@ -92,10 +100,26 @@ Fully specified in the lab guide under "Plan customization". In short: **shape b
 - [x] Phase 0, Step 1: monorepo scaffold
 - [x] Phase 0, Step 2: design system (v0.3 approved)
 - [x] Phase 0, Step 3a: `packages/tokens` and web wiring
-- [ ] Phase 0, Step 3b: NativeWind v4 on mobile (check SDK 58 compatibility first) plus mobile fonts
-- [ ] Phase 1: web screens on the mock client
-- [ ] Phase 2: mobile screens on the mock client
+- [x] Phase 0, Step 3b: NativeWind v4 on mobile plus mobile fonts (checked on a real phone; matches web)
+- [ ] **Phase 1: web screens on the mock client.** Planned steps; confirm the breakdown with the owner first:
+  1. `packages/shared`: Zod schemas and TS types for the full API contract in the lab guide, including plan constraints, revisions, socket events, and error codes such as `OUT_OF_CREDITS` (402), `VENUE_CLOSED` (422) and `AI_BUSY`.
+  2. A typed `ApiClient` interface with a **mock** implementation (in-memory data, simulated latency and failures, simulated socket progress and the closed-venue check) and an HTTP stub. `NEXT_PUBLIC_API_MODE=mock|http` picks one. TanStack Query provider.
+  3. Web app shell and base components from the design (Button with a price badge, Chip, Input, Segmented, Cover, Sheet, Timeline stop), plus a lint rule that flags off-system Tailwind classes.
+  4. Screens one at a time: auth, then plan a date with Shape it, then generating, then plan view with lock, swap and reroll, then my plans, then credits and settings.
+- [ ] Phase 2: mobile screens on the mock client (reusing `packages/shared` and the mock client)
 - [ ] Phase 3 onward: the backend lab, week by week, connecting screens as endpoints land
+
+### Where we left off (2026-10-24)
+- **Phase 0 is complete and committed.** The tree is clean except `Streakmate-Backend-Lab.pdf`, which is untracked on purpose.
+- **Next session:** start Phase 1, Step 1 (`packages/shared`). Begin with the step rhythm's Plan and Decisions; don't jump straight to code.
+- **Unanswered checkpoint:** the owner hasn't answered the Step 3b checkpoint questions. Offer the answers briefly at the start of the next session:
+  1. Why NativeWind needs a Babel change: `className` is compiled into style objects at build time.
+  2. Why pnpm isolated installs required declaring `react-native-css-interop`.
+  3. Why barrel imports bloated the fonts.
+- **Small follow-ups (not urgent):**
+  - Remove Expo dependencies that only the demo used (`expo-device`, `@expo/ui`, `expo-glass-effect`, and possibly `expo-symbols` and `expo-web-browser`). Check usage first.
+  - The owner may delete the old empty `backend/` and `frontend/` folders.
+  - The `.claude/settings.json` in `apps/mobile` enables the Expo plugin and came from the template.
 
 ## How to work with the owner
 
