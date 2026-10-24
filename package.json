@@ -1,0 +1,13 @@
+{
+  "name": "datewise",
+  "private": true,
+  "packageManager": "pnpm@12.11.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:mobile": "pnpm --filter mobile start",
+    "dev:api": "pnpm --filter api start:dev"
+  }
+}

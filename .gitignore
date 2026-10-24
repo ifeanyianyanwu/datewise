@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+.next/
+.expo/
+*.log
+.DS_Store
+coverage/
+# old empty scaffolds, superseded by apps/
+backend/
+frontend/
