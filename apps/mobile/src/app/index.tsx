@@ -1,98 +1,51 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { coverBackground } from "@datewise/tokens";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+// Temporary token check: mirrors the web page so both can be compared side by side.
+// Replaced by the real Plan a date screen in Phase 2.
+export default function Home() {
+  const insets = useSafeAreaInsets();
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <ScrollView
+      className="flex-1 bg-canvas"
+      contentContainerClassName="gap-6 px-4 pb-12"
+      contentContainerStyle={{ paddingTop: insets.top + 16 }}
+    >
+      <View
+        className="h-40 justify-end rounded-lg p-4 overflow-hidden"
+        style={{ backgroundImage: coverBackground("adventurous") }}
+      >
+        <Text className="font-display text-display-xl text-white">Saturday in Lekki</Text>
+      </View>
+
+      <View className="gap-2">
+        <Text className="font-body text-label uppercase text-ink-3">Tokens</Text>
+        <Text className="font-display text-display text-ink">Plan a date</Text>
+        <Text className="font-body text-body text-ink-2">
+          Free entry and four floors to wander before it gets busy.
+        </Text>
+        <Text className="font-mono text-data text-ink-2">16:00 → 17:45 · 14 min · 5.1 km</Text>
+        <Text className="font-body text-caption font-semibold text-secondary-text">Open in Maps</Text>
+      </View>
+
+      <View className="flex-row flex-wrap gap-2">
+        <Text className="rounded-pill border border-primary bg-primary-subtle px-3 py-1.5 font-body text-caption font-semibold text-primary">
+          Adventurous
+        </Text>
+        <Text className="rounded-pill bg-surface-2 px-3 py-1.5 font-body text-caption font-semibold text-success">
+          Ready
+        </Text>
+        <Text className="rounded-pill bg-surface-2 px-3 py-1.5 font-body text-caption font-semibold text-danger">
+          Out of credits
+        </Text>
+      </View>
+
+      <Pressable className="flex-row items-center justify-center gap-2 rounded-pill bg-primary py-4 active:bg-primary-press">
+        <Text className="font-display text-heading text-on-primary">Generate plan</Text>
+        <Text className="font-mono text-data text-on-primary opacity-70">1 credit</Text>
+      </Pressable>
+    </ScrollView>
   );
 }
-
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-});
