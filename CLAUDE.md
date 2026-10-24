@@ -44,8 +44,11 @@ These versions are newer than most training data and tutorials.
 - **Claude writes the first version of each backend module.** The owner then changes and extends it, guided by "Your turn" exercises.
 - **Mobile styling uses NativeWind**, so web and mobile share one styling model. Web uses Tailwind and TanStack Query; mobile uses Expo Router, TanStack Query and `expo-secure-store` for tokens.
 
-### Design language (v0.2, awaiting final approval)
-Preview: https://claude.ai/artifact/6cT7ZGTPykbofELnhuZVXZ. Inspired by Luma (event covers, pill buttons, glass panels, lots of space) and Discord (chunky wide display type, friendly shapes, compact list rows).
+### Docker
+Staged, following the guide: a services-only `docker-compose.yml` (MongoDB) at the start of the backend phase, the API joins in week 3 session 11, and the worker, queue Redis and Mailpit in sessions 13–14. **Web and mobile never run in Docker in dev**, because of Metro and device networking, QR codes, and slow file watching on macOS.
+
+### Design language (v0.3, approved 2026-10-24)
+Preview: https://claude.ai/artifact/6cT7ZGTPykbofELnhuZVXZ. It shows all the loop screens plus the customization UI (Shape it: places and evening; swap sheet; lock and reroll; cancel while generating). Build screens to match it. Inspired by Luma (event covers, pill buttons, glass panels, lots of space) and Discord (chunky wide display type, friendly shapes, compact list rows).
 
 - **Dark only, with warm neutrals:** bg `#0E0D0C`, surfaces `#161513` / `#1E1C1A` / `#282624`, borders `#2A2826` / `#3B3835`, text `#F3EEE6` / `#B5AEA4` / `#8A837A`.
 - **Beige is primary and means "you act":** `#E8DBC2` (hover `#F2E8D6`, pressed `#D8C8AA`), with `#1A1714` text on it. Used for the main button, selections, timeline dots and the credit coin.
@@ -54,7 +57,13 @@ Preview: https://claude.ai/artifact/6cT7ZGTPykbofELnhuZVXZ. Inspired by Luma (ev
 - **Status colors:** success `#4FD69C`, warning `#F3B755`, danger `#F2636A`. Kept separate from both accents.
 - **Type:** Archivo at 125% width, weight 800, for display (titles, plan names, buttons, balance). Figtree for body text. DM Mono for every number (times, distances, credits).
 - **Shape:** buttons, chips and segments are pills. Inputs and tiles 12, cards and glass panels 20, sheets 28. Spacing is on a 4pt grid.
-- **Rules:** one filled beige button per screen. Blue never asks for anything. Mood lives in covers. Numbers are monospaced.
+- **Rules:** one filled beige button per screen. Blue never asks for anything. Mood lives in covers. **Every action shows its price** ("Free" or "1 credit" on the button). Numbers are monospaced.
+- **Customization UI:**
+  - Pin status uses the status colors: green "open for your evening", amber "hours unknown, kept anyway", red "closed" with inline open alternatives and a Pin button.
+  - Locked stops get a filled beige dot and a beige lock button.
+  - The plan view's one beige button is "Reroll N unlocked stops".
+  - Swap opens a bottom sheet with alternatives showing extra travel and closing time.
+  - Live candidates while generating are outlined in blue.
 - **Accessibility:** every text pairing is measured against WCAG AA, not eyeballed.
 
 ### Plan customization
@@ -70,7 +79,7 @@ Fully specified in the lab guide under "Plan customization". In short: **shape b
 ## Status and roadmap
 
 - [x] Phase 0, Step 1: monorepo scaffold
-- [ ] Phase 0, Step 2: design system. v0.2 published; next, add the customization UI (Shape-it panel, lock and swap, reroll), then get approval
+- [x] Phase 0, Step 2: design system (v0.3 approved)
 - [ ] Phase 0, Step 3: `packages/tokens`, wired into Tailwind (web) and NativeWind (mobile)
 - [ ] Phase 1: web screens on the mock client
 - [ ] Phase 2: mobile screens on the mock client
