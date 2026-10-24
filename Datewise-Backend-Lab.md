@@ -26,6 +26,7 @@ Decisions made after the first draft. This document is kept current, and `CLAUDE
 - **Claude writes the first version of each backend module**, and you modify it, rather than building every module from a blank file.
 - **Plan customization is added:** shape a plan before generation, watch and cancel during, refine after. See "Plan customization". It brings new lessons in constraint validation, prompt injection, opening hours, revisions and cancellation.
 - **Tooling is newer:** Node 24 (Node 20 is end-of-life), NestJS 12 (Vitest replaces Jest), a pnpm 12 monorepo.
+- **Docker is staged:** services-only Compose in week 1, the API in week 3, the worker in session 13. Web and mobile stay on your machine (see "Local setup").
 
 ## The app: Datewise
 
@@ -211,11 +212,17 @@ Run every service in Docker rather than installing it. Use these host ports so t
 | Redis (queues) | 6382 | Week 3 |
 | Mailpit (fake email; web UI on 8025) | 1025 | Week 3 |
 
-To start MongoDB in week 1:
+**Docker comes in stages, each when there's something real to run:**
 
-```bash
-docker run -d --name lab-mongo -p 27018:27017 -v lab-mongo-data:/data/db mongo:7
-```
+1. **Week 1:** a small `docker-compose.yml` at the repo root with **only the services** (MongoDB for now, with a named volume). It replaces this one-liner, which does the same job:
+   ```bash
+   docker run -d --name lab-mongo -p 27018:27017 -v lab-mongo-data:/data/db mongo:7
+   ```
+   The API runs on your machine (`pnpm dev:api`) for instant reloads and easy debugging.
+2. **Week 3, session 11:** the API gets a multi-stage Dockerfile and joins Compose, with MongoDB as a replica set, the cache Redis, healthchecks and `condition: service_healthy`.
+3. **Week 3, sessions 13–14:** the worker, the queue Redis and Mailpit join Compose.
+
+**Web and mobile never run in Docker during development.** Expo's dev server has to reach a phone or simulator over the local network, show a QR code and watch files, and containers get in the way of all three, especially on macOS. `next dev` also watches files slowly through Docker on macOS. Both run on your machine against the API's mapped port.
 
 You'll also need a **Gemini API key** from Google AI Studio (free tier) by week 2. Open-Meteo and OpenStreetMap need no keys.
 
