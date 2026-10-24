@@ -1,0 +1,78 @@
+/* GENERATED from src/tokens.ts. Do not edit; run `pnpm --filter @datewise/tokens build`. */
+@theme {
+  --color-*: initial;
+  --color-canvas: #0E0D0C;
+  --color-surface-1: #161513;
+  --color-surface-2: #1E1C1A;
+  --color-surface-3: #282624;
+  --color-line: #2A2826;
+  --color-line-strong: #3B3835;
+  --color-ink: #F3EEE6;
+  --color-ink-2: #B5AEA4;
+  --color-ink-3: #8A837A;
+  --color-primary: #E8DBC2;
+  --color-primary-hover: #F2E8D6;
+  --color-primary-press: #D8C8AA;
+  --color-primary-subtle: rgba(232, 219, 194, 0.10);
+  --color-on-primary: #1A1714;
+  --color-secondary: #6E95FF;
+  --color-secondary-text: #93B0FF;
+  --color-secondary-subtle: rgba(110, 149, 255, 0.14);
+  --color-success: #4FD69C;
+  --color-warning: #F3B755;
+  --color-danger: #F2636A;
+  --color-white: #FFFFFF;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --radius-*: initial;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 9999px;
+
+  --text-display-xl: 40px;
+  --text-display-xl--line-height: 40px;
+  --text-display-xl--letter-spacing: -0.02em;
+  --text-display-xl--font-weight: 800;
+  --text-display: 28px;
+  --text-display--line-height: 30px;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 800;
+  --text-heading: 18px;
+  --text-heading--line-height: 24px;
+  --text-heading--letter-spacing: 0em;
+  --text-heading--font-weight: 700;
+  --text-body-lg: 17px;
+  --text-body-lg--line-height: 26px;
+  --text-body-lg--letter-spacing: 0em;
+  --text-body-lg--font-weight: 400;
+  --text-body: 15px;
+  --text-body--line-height: 22px;
+  --text-body--letter-spacing: 0em;
+  --text-body--font-weight: 400;
+  --text-caption: 13px;
+  --text-caption--line-height: 18px;
+  --text-caption--letter-spacing: 0em;
+  --text-caption--font-weight: 400;
+  --text-label: 11px;
+  --text-label--line-height: 11px;
+  --text-label--letter-spacing: 0.1em;
+  --text-label--font-weight: 600;
+  --text-data: 12px;
+  --text-data--line-height: 16px;
+  --text-data--letter-spacing: 0em;
+  --text-data--font-weight: 500;
+}
+
+@utility cover-* {
+  background-image: --value(--cover-*);
+}
+
+@theme {
+  --cover-cozy: radial-gradient(110% 90% at 15% 10%, #F2A96B 0%, transparent 58%), radial-gradient(110% 90% at 90% 30%, #B8434F 0%, transparent 58%), radial-gradient(120% 120% at 50% 110%, #3B1F3A 0%, #24141F 70%);
+  --cover-adventurous: radial-gradient(110% 90% at 10% 0%, #49C6B5 0%, transparent 58%), radial-gradient(110% 90% at 95% 20%, #3E6CF0 0%, transparent 58%), radial-gradient(120% 120% at 50% 110%, #0F2B33 0%, #0B1A24 70%);
+  --cover-foodie: radial-gradient(110% 90% at 85% 5%, #F6C25B 0%, transparent 58%), radial-gradient(110% 90% at 5% 35%, #E5534B 0%, transparent 58%), radial-gradient(120% 120% at 50% 110%, #3A1712 0%, #22100D 70%);
+  --cover-budget: radial-gradient(110% 90% at 20% 0%, #C8DB74 0%, transparent 58%), radial-gradient(110% 90% at 95% 40%, #3E9E7B 0%, transparent 58%), radial-gradient(120% 120% at 50% 110%, #16291F 0%, #0F1C16 70%);
+}

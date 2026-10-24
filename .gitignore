@@ -11,3 +11,5 @@ coverage/
 # old empty scaffolds, superseded by apps/
 backend/
 frontend/
+# generated design tokens are committed on purpose (see CLAUDE.md)
+!packages/tokens/dist/
