@@ -91,9 +91,9 @@ export type ThemeKey = "cozy" | "adventurous" | "foodie" | "budget";
 
 /**
  * Plan covers: expressive content colors, never UI chrome.
- * Stored as data (blob color + position + a dark base) because the platforms
- * render them differently: CSS radial gradients on web, a native gradient
- * or SVG on mobile.
+ * Stored as data (blob color + position + a dark base) and turned into a
+ * layered radial-gradient by `coverBackground`, which both platforms render:
+ * CSS `background-image` on web, `backgroundImage` on React Native 0.88+.
  */
 export const covers: Record<
   ThemeKey,
@@ -136,3 +136,10 @@ export const covers: Record<
     base: ["#16291F", "#0F1C16"],
   },
 };
+
+/** A cover as a layered radial-gradient, valid for CSS and React Native `backgroundImage`. */
+export function coverBackground(key: ThemeKey): string {
+  const { blobs, base } = covers[key];
+  const layers = blobs.map((b) => `radial-gradient(110% 90% at ${b.x}% ${b.y}%, ${b.color} 0%, transparent 58%)`);
+  return [...layers, `radial-gradient(120% 120% at 50% 110%, ${base[0]} 0%, ${base[1]} 70%)`].join(", ");
+}

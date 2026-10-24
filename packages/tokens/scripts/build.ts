@@ -9,18 +9,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { colors, covers, radius, typeScale } from "../src/tokens.ts";
+import { colors, coverBackground, covers, radius, typeScale } from "../src/tokens.ts";
 
 const dist = join(dirname(fileURLToPath(import.meta.url)), "..", "dist");
 const header = "GENERATED from src/tokens.ts. Do not edit; run `pnpm --filter @datewise/tokens build`.";
 const px = (n: number) => `${n}px`;
 const em = (n: number) => `${n}em`;
-
-function radialCover(key: keyof typeof covers): string {
-  const { blobs, base } = covers[key];
-  const layers = blobs.map((b) => `radial-gradient(110% 90% at ${b.x}% ${b.y}%, ${b.color} 0%, transparent 58%)`);
-  return [...layers, `radial-gradient(120% 120% at 50% 110%, ${base[0]} 0%, ${base[1]} 70%)`].join(", ");
-}
 
 // Tailwind 4 (web) --------------------------------------------------------------
 // `--color-*: initial` clears Tailwind's default palette so only our colors exist.
@@ -45,12 +39,13 @@ ${Object.entries(typeScale).map(([k, t]) => [
 }
 
 @theme {
-${(Object.keys(covers) as (keyof typeof covers)[]).map((k) => `  --cover-${k}: ${radialCover(k)};`).join("\n")}
+${(Object.keys(covers) as (keyof typeof covers)[]).map((k) => `  --cover-${k}: ${coverBackground(k)};`).join("\n")}
 }
 `;
 
 // Tailwind 3 (mobile, NativeWind 4) -----------------------------------------------
 // `theme.colors` (not `extend`) replaces the default palette, mirroring web.
+// React Native's letter spacing is absolute, so em is converted to px per size.
 const preset = {
   theme: {
     colors,
@@ -58,7 +53,11 @@ const preset = {
     extend: {
       fontSize: Object.fromEntries(Object.entries(typeScale).map(([k, t]) => [
         k,
-        [px(t.size), { lineHeight: px(t.lineHeight), letterSpacing: em(t.letterSpacing), fontWeight: String(t.weight) }],
+        [px(t.size), {
+          lineHeight: px(t.lineHeight),
+          letterSpacing: px(+(t.size * t.letterSpacing).toFixed(2)),
+          fontWeight: String(t.weight),
+        }],
       ])),
     },
   },
