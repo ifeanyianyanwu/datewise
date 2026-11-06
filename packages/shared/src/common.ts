@@ -40,15 +40,20 @@ export const VenueCategory = z.enum([
   "cinema",
   "live_music",
   "activity",
+  // Thrift, charity and vintage shops (OSM shop=second_hand, shop=charity).
+  "second_hand",
+  "market",
+  "bookshop",
 ]);
 export type VenueCategory = z.infer<typeof VenueCategory>;
 
 // A slot in the evening outline, and the venue categories that can fill it.
-export const SlotKind = z.enum(["activity", "dinner", "drinks", "dessert"]);
+export const SlotKind = z.enum(["activity", "shopping", "dinner", "drinks", "dessert"]);
 export type SlotKind = z.infer<typeof SlotKind>;
 
 export const SLOT_CATEGORIES: Record<SlotKind, readonly VenueCategory[]> = {
   activity: ["museum", "gallery", "park", "viewpoint", "cinema", "live_music", "activity"],
+  shopping: ["second_hand", "market", "bookshop"],
   dinner: ["restaurant"],
   drinks: ["bar", "live_music"],
   dessert: ["dessert", "cafe"],

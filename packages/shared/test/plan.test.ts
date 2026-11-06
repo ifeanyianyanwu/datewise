@@ -178,6 +178,19 @@ describe("CreatePlanRequest", () => {
       });
       expect(CreatePlanRequest.safeParse(request).success).toBe(true);
     });
+
+    it("accepts a shopping slot, for thrift and market dates", () => {
+      const request = withConstraints({ slots: ["shopping", "dinner"] });
+      expect(CreatePlanRequest.safeParse(request).success).toBe(true);
+    });
+
+    it("rejects a shopping slot when every shop category is excluded", () => {
+      const request = withConstraints({
+        slots: ["shopping"],
+        excludedCategories: ["second_hand", "market", "bookshop"],
+      });
+      expect(CreatePlanRequest.safeParse(request).success).toBe(false);
+    });
   });
 });
 
