@@ -107,7 +107,7 @@ describe("CreatePlanRequest", () => {
       const request = withConstraints({
         pinnedVenueIds: ["v1"],
         excludedCategories: ["bar"],
-        slots: ["activity", "dinner", "dessert"],
+        slots: [{ kind: "activity" }, { kind: "dinner" }, { kind: "dessert" }],
         stops: 3,
         maxTravelMins: 15,
         note: "Anniversary, she loves live music",
@@ -131,7 +131,7 @@ describe("CreatePlanRequest", () => {
 
     it("rejects an outline whose length doesn't match the number of stops", () => {
       const request = withConstraints({
-        slots: ["dinner", "dessert"],
+        slots: [{ kind: "dinner" }, { kind: "dessert" }],
         stops: 3,
       });
       expect(CreatePlanRequest.safeParse(request).success).toBe(false);
@@ -144,7 +144,7 @@ describe("CreatePlanRequest", () => {
 
     it("rejects a slot whose every category is excluded", () => {
       const request = withConstraints({
-        slots: ["dinner"],
+        slots: [{ kind: "dinner" }],
         excludedCategories: ["restaurant"],
       });
       expect(CreatePlanRequest.safeParse(request).success).toBe(false);
@@ -160,33 +160,33 @@ describe("CreatePlanRequest", () => {
 
     it("dinner can appear at most once in the evening outline", () => {
       const request = withConstraints({
-        slots: ["dinner", "activity", "dinner"],
+        slots: [{ kind: "dinner" }, { kind: "activity" }, { kind: "dinner" }],
       });
       expect(CreatePlanRequest.safeParse(request).success).toBe(false);
     });
 
     it("points the dinner error at the second dinner", () => {
       const result = CreatePlanRequest.safeParse(
-        withConstraints({ slots: ["dinner", "activity", "dinner"] }),
+        withConstraints({ slots: [{ kind: "dinner" }, { kind: "activity" }, { kind: "dinner" }] }),
       );
       expect(result.error?.issues[0]?.path).toEqual(["constraints", "slots", 2]);
     });
 
     it("accepts other slots repeated, like two activities", () => {
       const request = withConstraints({
-        slots: ["activity", "dinner", "activity"],
+        slots: [{ kind: "activity" }, { kind: "dinner" }, { kind: "activity" }],
       });
       expect(CreatePlanRequest.safeParse(request).success).toBe(true);
     });
 
     it("accepts a shopping slot, for thrift and market dates", () => {
-      const request = withConstraints({ slots: ["shopping", "dinner"] });
+      const request = withConstraints({ slots: [{ kind: "shopping" }, { kind: "dinner" }] });
       expect(CreatePlanRequest.safeParse(request).success).toBe(true);
     });
 
     it("rejects a shopping slot when every shop category is excluded", () => {
       const request = withConstraints({
-        slots: ["shopping"],
+        slots: [{ kind: "shopping" }],
         excludedCategories: ["second_hand", "market", "bookshop"],
       });
       expect(CreatePlanRequest.safeParse(request).success).toBe(false);
@@ -200,6 +200,59 @@ describe("CreatePlanRequest", () => {
     it("rejects a challenges flag that isn't a boolean", () => {
       const request = withConstraints({ challenges: "yes" });
       expect(CreatePlanRequest.safeParse(request).success).toBe(false);
+    });
+
+    describe("slot focus", () => {
+      const firstIssuePath = (constraints: object) =>
+        CreatePlanRequest.safeParse(withConstraints(constraints)).error?.issues[0]?.path;
+
+      it("accepts an activity narrowed to workshops", () => {
+        const request = withConstraints({
+          slots: [{ kind: "activity", categories: ["workshop"] }, { kind: "dinner" }],
+        });
+        expect(CreatePlanRequest.safeParse(request).success).toBe(true);
+      });
+
+      it("rejects a bare slot name, the old format", () => {
+        expect(firstIssuePath({ slots: ["activity"] })).toEqual(["constraints", "slots", 0]);
+      });
+
+      it("rejects a focus category that can't fill the slot", () => {
+        expect(
+          firstIssuePath({ slots: [{ kind: "activity", categories: ["restaurant"] }] }),
+        ).toEqual(["constraints", "slots", 0, "categories", 0]);
+      });
+
+      it("rejects an empty focus list", () => {
+        expect(firstIssuePath({ slots: [{ kind: "activity", categories: [] }] })).toEqual([
+          "constraints",
+          "slots",
+          0,
+          "categories",
+        ]);
+      });
+
+      it("rejects a focus that lists a category twice", () => {
+        expect(
+          firstIssuePath({ slots: [{ kind: "activity", categories: ["games", "games"] }] }),
+        ).toEqual(["constraints", "slots", 0, "categories"]);
+      });
+
+      it("rejects a narrowed slot whose focus is all excluded, even if other kinds remain", () => {
+        expect(
+          firstIssuePath({
+            slots: [{ kind: "activity", categories: ["workshop"] }],
+            excludedCategories: ["workshop"],
+          }),
+        ).toEqual(["constraints", "slots", 0]);
+      });
+
+      it("accepts bites three times in a row, for a crawl", () => {
+        const request = withConstraints({
+          slots: [{ kind: "bites" }, { kind: "bites" }, { kind: "bites" }],
+        });
+        expect(CreatePlanRequest.safeParse(request).success).toBe(true);
+      });
     });
   });
 });

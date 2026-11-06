@@ -44,20 +44,83 @@ export const VenueCategory = z.enum([
   "second_hand",
   "market",
   "bookshop",
+  // Classes you take together: pottery, painting, cooking.
+  "workshop",
+  // Arcades, bowling, escape rooms, karaoke, mini golf.
+  "games",
+  // Theatre and comedy.
+  "theatre",
+  "beach",
+  // Stalls, kiosks and fast food: the stops of a food crawl.
+  "street_food",
 ]);
 export type VenueCategory = z.infer<typeof VenueCategory>;
 
-// A slot in the evening outline, and the venue categories that can fill it.
-export const SlotKind = z.enum(["activity", "shopping", "dinner", "drinks", "dessert"]);
+// Kinds of place that usually need a booking. Datewise doesn't book, so the UI says so instead.
+export const BOOK_AHEAD_CATEGORIES: readonly VenueCategory[] = ["workshop", "theatre"];
+
+// A slot in the outline, and the venue categories that can fill it.
+export const SlotKind = z.enum(["activity", "shopping", "bites", "dinner", "drinks", "dessert"]);
 export type SlotKind = z.infer<typeof SlotKind>;
 
 export const SLOT_CATEGORIES: Record<SlotKind, readonly VenueCategory[]> = {
-  activity: ["museum", "gallery", "park", "viewpoint", "cinema", "live_music", "activity"],
+  activity: [
+    "museum",
+    "gallery",
+    "park",
+    "viewpoint",
+    "cinema",
+    "live_music",
+    "activity",
+    "workshop",
+    "games",
+    "theatre",
+    "beach",
+  ],
   shopping: ["second_hand", "market", "bookshop"],
+  // Small plates. Unlike dinner, bites can repeat, which is what makes a crawl.
+  bites: ["street_food", "cafe", "dessert", "market"],
   dinner: ["restaurant"],
   drinks: ["bar", "live_music"],
   dessert: ["dessert", "cafe"],
 };
+
+// A slot in the outline, optionally narrowed to some of the categories that can fill it
+// ("an activity, but a workshop").
+export const Slot = z
+  .object({
+    kind: SlotKind,
+    categories: z.array(VenueCategory).min(1).optional(),
+  })
+  .superRefine(({ kind, categories }, ctx) => {
+    if (!categories) return;
+    categories.forEach((category, index) => {
+      if (!SLOT_CATEGORIES[kind].includes(category)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["categories", index],
+          message: `A ${category} can't fill a ${kind} slot`,
+        });
+      }
+    });
+    if (new Set(categories).size !== categories.length) {
+      ctx.addIssue({ code: "custom", path: ["categories"], message: "Each category can only be listed once" });
+    }
+  });
+export type Slot = z.infer<typeof Slot>;
+
+// The categories that may fill a slot: its focus when it has one, otherwise every category of its kind.
+export const slotCategories = (slot: Slot): readonly VenueCategory[] =>
+  slot.categories ?? SLOT_CATEGORIES[slot.kind];
+
+// Clients offer presets and a custom picker; the contract only sees minutes.
+export const DurationMins = z.number().int().min(30).max(480).multipleOf(15);
+
+// Each stop needs at least this long, so a 30-minute date fits two stops at most.
+export const MIN_MINS_PER_STOP = 15;
+
+export const BudgetTier = z.enum(["$", "$$", "$$$"]);
+export type BudgetTier = z.infer<typeof BudgetTier>;
 
 export const TravelMode = z.enum(["walk", "drive", "transit"]);
 export type TravelMode = z.infer<typeof TravelMode>;

@@ -1,11 +1,15 @@
 import { z } from "zod";
 import {
+  BudgetTier,
+  DurationMins,
   Id,
   IsoDateTime,
   LatLng,
+  MIN_MINS_PER_STOP,
   Money,
   page,
-  SLOT_CATEGORIES,
+  Slot,
+  slotCategories,
   SlotKind,
   Theme,
   TransitMode,
@@ -16,13 +20,10 @@ import {
 // ---- Request ----
 
 export const Budget = z.discriminatedUnion("mode", [
-  z.object({ mode: z.literal("tier"), tier: z.enum(["$", "$$", "$$$"]) }),
+  z.object({ mode: z.literal("tier"), tier: BudgetTier }),
   z.object({ mode: z.literal("amount"), amount: Money }),
 ]);
 export type Budget = z.infer<typeof Budget>;
-
-// Clients offer presets and a custom picker; the contract only sees minutes.
-export const DurationMins = z.number().int().min(30).max(480).multipleOf(15);
 
 // Required, with no default: the user always picks how they get around.
 export const Travel = z.discriminatedUnion("mode", [
@@ -42,7 +43,7 @@ export type Travel = z.infer<typeof Travel>;
 export const PlanConstraints = z.object({
   pinnedVenueIds: z.array(Id).max(4).optional(),
   excludedCategories: z.array(VenueCategory).optional(),
-  slots: z.array(SlotKind).min(1).max(4).optional(),
+  slots: z.array(Slot).min(1).max(4).optional(),
   stops: z.number().int().min(1).max(4).optional(),
   maxTravelMins: z.number().int().min(5).max(60).optional(),
   // Untrusted user text. The API puts it in a delimited prompt section as a preference.
@@ -51,9 +52,6 @@ export const PlanConstraints = z.object({
   challenges: z.boolean().optional(),
 });
 export type PlanConstraints = z.infer<typeof PlanConstraints>;
-
-// Each stop needs at least this long, so a 30-minute date fits two stops at most.
-export const MIN_MINS_PER_STOP = 15;
 
 // POST /plans. Also stored on the plan as its `input`.
 // Rules that need more than one field live in superRefine. Rules that need venue data
@@ -100,7 +98,8 @@ export const CreatePlanRequest = z
     }
 
     // One dinner per date. Other slots can repeat (two activities, a second round of drinks).
-    const secondDinner = slots?.indexOf("dinner", slots.indexOf("dinner") + 1) ?? -1;
+    const kinds = slots?.map((slot) => slot.kind);
+    const secondDinner = kinds?.indexOf("dinner", kinds.indexOf("dinner") + 1) ?? -1;
     if (secondDinner !== -1) {
       ctx.addIssue({
         code: "custom",
@@ -111,11 +110,11 @@ export const CreatePlanRequest = z
 
     if (slots && excludedCategories) {
       slots.forEach((slot, index) => {
-        if (SLOT_CATEGORIES[slot].every((category) => excludedCategories.includes(category))) {
+        if (slotCategories(slot).every((category) => excludedCategories.includes(category))) {
           ctx.addIssue({
             code: "custom",
             path: ["constraints", "slots", index],
-            message: `Every kind of place that fits "${slot}" is excluded`,
+            message: `Every kind of place that fits "${slot.kind}" is excluded`,
           });
         }
       });
