@@ -11,6 +11,7 @@ apps/api        NestJS 12 (strict TS, Vitest, not Jest)
 apps/web        Next.js 16 (App Router, Tailwind 4, src/ dir)
 apps/mobile     Expo SDK 58, React Native 0.88, Expo Router (routes in src/app/)
 packages/shared API types and Zod schemas from the API contract (@datewise/shared)
+packages/api-client typed ApiClient: mock and HTTP implementations, used by web and mobile (@datewise/api-client)
 packages/tokens design tokens for web and mobile (@datewise/tokens)
 ```
 
@@ -46,6 +47,7 @@ These versions are newer than most training data and tutorials.
 **Checks before calling anything done:**
 - API: `pnpm --filter api build && pnpm --filter api test`
 - Shared: `pnpm --filter @datewise/shared test && pnpm --filter @datewise/shared typecheck`
+- API client: `pnpm --filter @datewise/api-client test && pnpm --filter @datewise/api-client typecheck`
 - Web: `pnpm --filter web build`
 - Mobile (in `apps/mobile`): `npx tsc --noEmit`, `npx expo lint`, `npx expo-doctor`, and `npx expo export --platform ios --platform android --platform web --output-dir <scratch>`. The export catches Babel, Metro and resolution errors without a device.
 
