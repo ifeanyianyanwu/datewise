@@ -191,6 +191,16 @@ describe("CreatePlanRequest", () => {
       });
       expect(CreatePlanRequest.safeParse(request).success).toBe(false);
     });
+
+    it("accepts asking for challenges", () => {
+      const request = withConstraints({ challenges: true });
+      expect(CreatePlanRequest.safeParse(request).success).toBe(true);
+    });
+
+    it("rejects a challenges flag that isn't a boolean", () => {
+      const request = withConstraints({ challenges: "yes" });
+      expect(CreatePlanRequest.safeParse(request).success).toBe(false);
+    });
   });
 });
 
@@ -216,6 +226,121 @@ describe("Plan", () => {
 
   it("rejects an unknown status", () => {
     expect(Plan.safeParse({ ...base, status: "paused" }).success).toBe(false);
+  });
+
+  describe("challenges in a ready plan", () => {
+    const thriftDare = {
+      title: "Thrift dare",
+      rules: "€15 each. Pick an outfit for the other person; they wear it to dinner.",
+      spendCap: { amountMinor: 3000, currency: "EUR" },
+    };
+    const photoHunt = {
+      title: "Photo hunt",
+      rules: "Photograph five blue things before sunset. Best shot picks dessert.",
+      spendCap: null,
+    };
+
+    const stop = (challenge: object | null) => ({
+      venue: {
+        venueId: "v1",
+        name: "Second Chance Vintage",
+        category: "second_hand",
+        location: { lat: 35.8989, lng: 14.5146 },
+      },
+      slot: "shopping",
+      startsAt: "2026-11-14T19:00:00+01:00",
+      endsAt: "2026-11-14T20:00:00+01:00",
+      reason: "Cheap racks and a changing room big enough for two",
+      locked: false,
+      estimatedCost: null,
+      travelFromPrevious: null,
+      challenge,
+    });
+
+    const readyPlan = (
+      challenges: (object | null)[],
+      input: object = validRequest(),
+    ) => ({
+      ...base,
+      input,
+      status: "ready",
+      result: {
+        stops: challenges.map(stop),
+        weather: null,
+        estimatedTotal: null,
+      },
+    });
+
+    const asked = (overrides: object = {}) => ({
+      ...withConstraints({ challenges: true }),
+      ...overrides,
+    });
+
+    it("accepts a plan without challenges when none were asked for", () => {
+      expect(Plan.safeParse(readyPlan([null])).success).toBe(true);
+    });
+
+    it("rejects a challenge nobody asked for", () => {
+      const result = Plan.safeParse(readyPlan([photoHunt]));
+      expect(result.success).toBe(false);
+      expect(result.error?.issues[0]?.path).toEqual([
+        "result",
+        "stops",
+        0,
+        "challenge",
+      ]);
+    });
+
+    it("accepts a challenge when asked for", () => {
+      expect(Plan.safeParse(readyPlan([null, photoHunt], asked())).success).toBe(
+        true,
+      );
+    });
+
+    it("rejects a plan with no challenge when one was asked for", () => {
+      const result = Plan.safeParse(readyPlan([null, null], asked()));
+      expect(result.success).toBe(false);
+      expect(result.error?.issues[0]?.path).toEqual(["result", "stops"]);
+    });
+
+    it("rejects a challenge with empty rules", () => {
+      const challenge = { ...photoHunt, rules: "   " };
+      expect(Plan.safeParse(readyPlan([challenge], asked())).success).toBe(
+        false,
+      );
+    });
+
+    describe("spend caps against an amount budget", () => {
+      const budgetOf = (amountMinor: number, currency = "EUR") => ({
+        budget: { mode: "amount", amount: { amountMinor, currency } },
+      });
+
+      it("accepts caps that fit inside the budget together", () => {
+        const plan = readyPlan([thriftDare, thriftDare], asked(budgetOf(6000)));
+        expect(Plan.safeParse(plan).success).toBe(true);
+      });
+
+      it("rejects caps that add up to more than the budget", () => {
+        const plan = readyPlan([thriftDare, thriftDare], asked(budgetOf(5000)));
+        const result = Plan.safeParse(plan);
+        expect(result.success).toBe(false);
+        expect(result.error?.issues[0]?.path).toEqual(["result", "stops"]);
+      });
+
+      it("rejects a cap in a different currency from the budget", () => {
+        const plan = readyPlan([thriftDare], asked(budgetOf(8000, "GBP")));
+        const result = Plan.safeParse(plan);
+        expect(result.success).toBe(false);
+        expect(result.error?.issues[0]?.path).toEqual([
+          "result",
+          "stops",
+          0,
+          "challenge",
+          "spendCap",
+          "currency",
+        ]);
+      });
+    });
   });
 });
 

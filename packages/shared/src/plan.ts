@@ -47,6 +47,8 @@ export const PlanConstraints = z.object({
   maxTravelMins: z.number().int().min(5).max(60).optional(),
   // Untrusted user text. The API puts it in a delimited prompt section as a preference.
   note: z.string().trim().max(280).optional(),
+  // Ask for playful challenges on some stops (a photo hunt, a thrift dare with a cap).
+  challenges: z.boolean().optional(),
 });
 export type PlanConstraints = z.infer<typeof PlanConstraints>;
 
@@ -154,6 +156,15 @@ export const Leg = z.object({
 });
 export type Leg = z.infer<typeof Leg>;
 
+// Written by the AI and played at the stop's venue. Model output, so its text is bounded.
+export const Challenge = z.object({
+  title: z.string().trim().min(1).max(60),
+  rules: z.string().trim().min(1).max(280),
+  // A spending limit for the pair, e.g. a thrift dare. null when nothing is bought.
+  spendCap: Money.nullable(),
+});
+export type Challenge = z.infer<typeof Challenge>;
+
 export const Stop = z.object({
   venue: VenueSnapshot,
   slot: SlotKind.nullable(),
@@ -164,6 +175,7 @@ export const Stop = z.object({
   estimatedCost: Money.nullable(),
   // null for the first stop.
   travelFromPrevious: Leg.nullable(),
+  challenge: Challenge.nullable(),
 });
 export type Stop = z.infer<typeof Stop>;
 
@@ -212,11 +224,63 @@ const planBase = z.object({
   updatedAt: IsoDateTime,
 });
 
+// Rules that compare the result with what was asked for. They need no venue data,
+// so they live here and run wherever a plan is parsed: the mock client and the API.
+const ReadyPlan = planBase
+  .extend({ status: z.literal("ready"), result: PlanResult })
+  .superRefine(({ input, result }, ctx) => {
+    const asked = input.constraints?.challenges === true;
+    const stopsWithChallenge = result.stops.flatMap((stop, index) =>
+      stop.challenge ? [{ index, challenge: stop.challenge }] : [],
+    );
+
+    if (asked && stopsWithChallenge.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["result", "stops"],
+        message: "Challenges were asked for, but no stop has one",
+      });
+    }
+    if (!asked) {
+      for (const { index } of stopsWithChallenge) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["result", "stops", index, "challenge"],
+          message: "Challenges weren't asked for",
+        });
+      }
+    }
+
+    // With a tier budget there's no amount to compare against.
+    if (input.budget.mode !== "amount") return;
+    const budget = input.budget.amount;
+    let capsTotal = 0;
+    for (const { index, challenge } of stopsWithChallenge) {
+      if (!challenge.spendCap) continue;
+      if (challenge.spendCap.currency !== budget.currency) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["result", "stops", index, "challenge", "spendCap", "currency"],
+          message: `The spend cap must be in the budget's currency, ${budget.currency}`,
+        });
+        continue;
+      }
+      capsTotal += challenge.spendCap.amountMinor;
+    }
+    if (capsTotal > budget.amountMinor) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["result", "stops"],
+        message: "The challenges' spend caps add up to more than the budget",
+      });
+    }
+  });
+
 // A discriminated union: each status carries exactly the fields that exist in it.
 export const Plan = z.discriminatedUnion("status", [
   planBase.extend({ status: z.literal("queued") }),
   planBase.extend({ status: z.literal("generating"), progress: PlanProgress }),
-  planBase.extend({ status: z.literal("ready"), result: PlanResult }),
+  ReadyPlan,
   planBase.extend({ status: z.literal("failed"), failure: PlanFailure }),
   planBase.extend({ status: z.literal("cancelled") }),
 ]);
