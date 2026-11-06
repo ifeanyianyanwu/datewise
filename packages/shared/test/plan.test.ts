@@ -157,6 +157,27 @@ describe("CreatePlanRequest", () => {
       });
       expect(CreatePlanRequest.safeParse(request).success).toBe(false);
     });
+
+    it("dinner can appear at most once in the evening outline", () => {
+      const request = withConstraints({
+        slots: ["dinner", "activity", "dinner"],
+      });
+      expect(CreatePlanRequest.safeParse(request).success).toBe(false);
+    });
+
+    it("points the dinner error at the second dinner", () => {
+      const result = CreatePlanRequest.safeParse(
+        withConstraints({ slots: ["dinner", "activity", "dinner"] }),
+      );
+      expect(result.error?.issues[0]?.path).toEqual(["constraints", "slots", 2]);
+    });
+
+    it("accepts other slots repeated, like two activities", () => {
+      const request = withConstraints({
+        slots: ["activity", "dinner", "activity"],
+      });
+      expect(CreatePlanRequest.safeParse(request).success).toBe(true);
+    });
   });
 });
 

@@ -97,6 +97,16 @@ export const CreatePlanRequest = z
       });
     }
 
+    // One dinner per date. Other slots can repeat (two activities, a second round of drinks).
+    const secondDinner = slots?.indexOf("dinner", slots.indexOf("dinner") + 1) ?? -1;
+    if (secondDinner !== -1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["constraints", "slots", secondDinner],
+        message: "The outline can include dinner only once",
+      });
+    }
+
     if (slots && excludedCategories) {
       slots.forEach((slot, index) => {
         if (SLOT_CATEGORIES[slot].every((category) => excludedCategories.includes(category))) {
