@@ -16,6 +16,7 @@ import {
   TravelMode,
   VenueCategory,
 } from "./common";
+import { IdeaId } from "./idea";
 
 // ---- Request ----
 
@@ -66,6 +67,9 @@ export const CreatePlanRequest = z
     budget: Budget,
     travel: Travel,
     constraints: PlanConstraints.optional(),
+    // The idea the form started from. Only the id travels: the API looks up the idea's
+    // challenge hint itself, so prompt text never comes from the client.
+    ideaId: IdeaId.optional(),
   })
   .superRefine(({ durationMins, constraints }, ctx) => {
     if (!constraints) return;

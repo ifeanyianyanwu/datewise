@@ -255,6 +255,18 @@ describe("CreatePlanRequest", () => {
       });
     });
   });
+
+  describe("ideaId", () => {
+    it("accepts an idea from the catalog", () => {
+      const request = { ...validRequest(), ideaId: "pottery-and-pasta" };
+      expect(CreatePlanRequest.safeParse(request).success).toBe(true);
+    });
+
+    it("rejects an idea that isn't in the catalog", () => {
+      const result = CreatePlanRequest.safeParse({ ...validRequest(), ideaId: "skydiving" });
+      expect(result.error?.issues[0]?.path).toEqual(["ideaId"]);
+    });
+  });
 });
 
 describe("Plan", () => {
