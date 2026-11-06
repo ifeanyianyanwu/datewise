@@ -65,6 +65,8 @@ These versions are newer than most training data and tutorials.
 - **Get approval before big moves.** Show the plan before executing. The owner makes the key calls: present options with **one clear recommendation** and the trade-off. Ask only about decisions that are genuinely theirs.
 - **Brainstorm before building** anything product-shaped. Lay out the ideas, sort them by cost and by what they teach, recommend a cut, then ask.
 - **Grade checkpoint answers.** Answers tend to be short: confirm what's right and fill in what's missing ("half right, the real reason is…"). Don't just accept them.
+- **Link everything to the code.** Whenever you mention something inside a file (decisions, explanations, checkpoint questions, answers), link the file and line, e.g. [plan.ts:42](packages/shared/src/plan.ts#L42), so the owner can read it themselves. When grading a wrong or partial answer, link the relevant files plus official docs or a credible article that explains it.
+- **Test every feature, red then green.** Write the test first and show it failing, then implement until it passes, and show both runs. Cover both rejected and accepted inputs.
 - **Design taste matters.** The owner pushes back on generic results. Aim for a deliberate, distinctive look that matches the approved design (see `plan.md`), and show designs as real screens, not swatch sheets.
 - **Tie features to lessons.** Each feature maps to a concept in `plan.md`. Point out the mapping, and push back on features that teach nothing.
 - **Keep the docs current.** At the end of each step, update `plan.md` (status, roadmap checkboxes, decision log) or this file (setup, process) in the same change.
